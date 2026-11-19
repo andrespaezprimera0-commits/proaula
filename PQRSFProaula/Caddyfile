@@ -1,0 +1,6 @@
+# Caddy saca y renueva solo el certificado HTTPS (Let's Encrypt).
+# El dominio se toma de la variable DOMINIO del archivo .env
+{$DOMINIO} {
+    encode gzip
+    reverse_proxy app:8081
+}

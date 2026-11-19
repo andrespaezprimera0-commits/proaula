@@ -1,0 +1,41 @@
+services:
+  mongo:
+    image: mongo:7
+    restart: always
+    volumes:
+      - mongo_data:/data/db
+    # El puerto 27017 NO se publica: solo la app puede acceder a Mongo
+
+  app:
+    build: .
+    restart: always
+    depends_on:
+      - mongo
+    env_file:
+      - .env            # JWT_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/solicitudes_db_assj
+      SERVER_FORWARD_HEADERS_STRATEGY: framework
+      APP_JWT_COOKIE_SECURE: "true"
+    expose:
+      - "8081"          # solo visible para Caddy, no para internet
+
+  caddy:
+    image: caddy:2
+    restart: always
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMINIO: ${DOMINIO}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  mongo_data:
+  caddy_data:
+  caddy_config:
